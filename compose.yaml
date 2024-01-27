@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  
+  postgres:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    volumes:
+      - postgres-storage:/var/lib/postgresql
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=qwerty
+      - POSTGRES_USER=alex
+      - POSTGRES_DB=mydatabase
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: unless-stopped
+    labels:
+      - dev.orbstack.domains=pgadmin.local
+    volumes:
+      - pgadmin-storage:/var/lib/pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.org
+      - PGADMIN_DEFAULT_PASSWORD=qwerty
+      - PGADMIN_DISABLE_POSTFIX=true
+    depends_on:
+      - postgres
+
+
+volumes:
+  postgres-storage:
+  pgadmin-storage:
