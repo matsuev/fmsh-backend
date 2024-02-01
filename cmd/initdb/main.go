@@ -9,12 +9,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
+
+	"fmsh-backend/internal/repository"
 )
 
 func main() {
 	println("Init Database")
 
-	postgresUrl := "postgres://alex:qwerty@localhost:5532/mydatabase"
+	postgresUrl := "postgres://alex:qwerty@localhost:5432/mydatabase"
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
@@ -29,23 +31,36 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	for i := 0; i < 50; i++ {
-		username := fmt.Sprintf("user-%03d", i)
-		password := fmt.Sprintf("pass-%03d", i)
+	accounts := repository.NewAccountRepository(conn)
 
-		id, err := InsertNewAccount(conn, username, password)
-		if err != nil {
-			log.Println(err)
-		} else {
-			fmt.Println("New user ID:", id.String())
-		}
+	account, err := accounts.FindByUserName("user-001")
+	if err != nil {
+		log.Println(err)
+	} else {
+		fmt.Println(account)
 	}
 
-	// bcrypt.CompareHashAndPassword()
+	account.UserName = "vasya"
+
+	if err := accounts.Update(account); err != nil {
+		log.Println(err)
+	}
+
+	// for i := 0; i < 50; i++ {
+	// 	username := fmt.Sprintf("user-%03d", i)
+	// 	password := fmt.Sprintf("pass-%03d", i)
+
+	// 	account, err := accounts.Create(username, password)
+	// 	if err != nil {
+	// 		log.Println(err)
+	// 	} else {
+	// 		fmt.Println(account)
+	// 	}
+	// }
 
 }
 
-func InsertNewAccount(conn *pgx.Conn, username string, password string) (*uuid.UUID, error) {
+func CreateNewAccount(conn *pgx.Conn, username string, password string) (*uuid.UUID, error) {
 	const qInsertAccount string = `
 		INSERT INTO public.account
 			(username, password)
